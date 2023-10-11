@@ -17,7 +17,8 @@ router.get('/', async (req, res) => {
     await page.goto(url, { timeout: 10000 });
 
     await page.waitForSelector('div > div > div > div > div > div > div');
-    await page.waitForSelector('div >>> img');
+    await page.waitForSelector('img');
+    await page.waitForSelector('a');
 
     const texts = await page.$$eval('div > div > div > div > div > div > div', (elements) => {
       const texts = elements.map((element) => {
@@ -41,6 +42,8 @@ router.get('/', async (req, res) => {
         short_description: '',
         author: '',
         author_description: '',
+        image: '',
+        href: '',
       };
       section.genre = textSection[0];
       section.title = textSection[1];
@@ -48,12 +51,31 @@ router.get('/', async (req, res) => {
       section.author = textSection[3];
       section.author_description = textSection[4];
       sections.push(section);
-    })
+    });
+
+    const images = await page.$$eval('img', (elements) => {
+      const images = elements.map((element) => {
+        return element.src;
+      });
+      return images;
+    });
+
+    const hrefs = await page.$$eval('a', (elements) => {
+      const hrefs = elements.map((element) => {
+        return element.href;
+      });
+      return hrefs;
+    });
+
+    for (let i = 0; i < images.length; i+=2) {
+      sections[i/2].image = images[i];
+      sections[i/2].href = hrefs[i];
+    }
 
     await browser.close();
 
     res.json(sections);
-
+    
   } catch (error) {
     res.status(500).json({ error: 'Scraping failed', message: error.message });
   }
