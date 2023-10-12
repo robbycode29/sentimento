@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer-core');
+const words = require('../utils/wordsApi');
 
 var express = require('express');
 var router = express.Router();
@@ -6,6 +7,55 @@ var router = express.Router();
 router.get('/', async (req, res) => {
   // const url = req.query.url;
   const url = 'https://wsa-test.vercel.app/';
+
+  const getWords = async () => {
+    const positiveWordSets = [];
+    const negativeWordSets = [];
+
+    for (let i = 0; i < words.positive.length; i++) {
+      positiveWordSets.push(await words.positive[i]);
+    }
+    for (let i = 0; i < words.negative.length; i++) {
+      negativeWordSets.push(await words.negative[i]);
+    }
+
+    const positiveWords = positiveWordSets.flat(1);
+    const negativeWords = negativeWordSets.flat(1);
+    
+    return { positiveWords, negativeWords };
+  }
+
+  const getSentiment = async (text) => {
+
+    // Uncomment this line and comment out the next two lines to use the Words API for the positive and negative words lists used in sentiment analysis
+    // And also uncomment the specified lines in utils/wordsApi.js
+    // const { positiveWords, negativeWords } = await getWords();
+
+    const positiveWords = ['joyful', 'blissful', 'loving', 'successful', 'delightful', 'inspiring', 'kind', 'grateful', 'hopeful', 'harmonious', 'exciting', 'serene', 'friendly', 'vibrant', 'positive', 'optimistic', 'upbeat', 'encouraging'];
+    const negativeWords = ['sad', 'disappointing', 'unsuccessful', 'miserable', 'grief-stricken', 'lonely', 'desperate', 'anguished', 'regretful', 'frustrated', 'negative', 'critical', 'unhappy', 'unpleasant', 'unfortunate', 'unlucky'];
+
+    const positiveMatches = [];
+    const negativeMatches = [];
+
+    for (let i = 0; i < positiveWords.length; i++) {
+      if (text.includes(positiveWords[i])) {
+        positiveMatches.push(positiveWords[i]);
+      }
+    }
+    for (let i = 0; i < negativeWords.length; i++) {
+      if (text.includes(negativeWords[i])) {
+        negativeMatches.push(negativeWords[i]);
+      }
+    }
+
+    if (positiveMatches.length > negativeMatches.length) {
+      return 'positive';
+    } else if (negativeMatches.length > positiveMatches.length) {
+      return 'negative';
+    } else {
+      return 'neutral';
+    }
+  };
 
   try {
     const browser = await puppeteer.launch({
@@ -26,16 +76,16 @@ router.get('/', async (req, res) => {
       });
       return [...new Set(texts.flat(1))];
     });
-    
+
     let textSections = [];
 
-    for (let i = 0; i < texts.length; i+=5) {
-      textSections.push(texts.slice(i, i+5));
+    for (let i = 0; i < texts.length; i += 5) {
+      textSections.push(texts.slice(i, i + 5));
     }
 
     let sections = [];
 
-    textSections.forEach((textSection) => {
+    textSections.forEach(async (textSection) => {
       const section = {
         genre: '',
         title: '',
@@ -44,12 +94,14 @@ router.get('/', async (req, res) => {
         author_description: '',
         image: '',
         href: '',
+        sentiment: '',
       };
       section.genre = textSection[0];
       section.title = textSection[1];
       section.short_description = textSection[2];
       section.author = textSection[3];
       section.author_description = textSection[4];
+      section.sentiment = await getSentiment(textSection[2]);
       sections.push(section);
     });
 
@@ -67,15 +119,15 @@ router.get('/', async (req, res) => {
       return hrefs;
     });
 
-    for (let i = 0; i < images.length; i+=2) {
-      sections[i/2].image = images[i];
-      sections[i/2].href = hrefs[i];
+    for (let i = 0; i < images.length; i += 2) {
+      sections[i / 2].image = images[i];
+      sections[i / 2].href = hrefs[i];
     }
 
     await browser.close();
 
     res.json(sections);
-    
+
   } catch (error) {
     res.status(500).json({ error: 'Scraping failed', message: error.message });
   }
