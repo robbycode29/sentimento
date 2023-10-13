@@ -6,14 +6,18 @@
       </div>
       <search-bar @search="scrapeLink" />
       <div class="flex flex-col items-center">
-        <span v-if="!posts.length && !loading" class="text-white mt-36 font-normal italic">No queries yet</span>
+        <span v-if="!posts.length && !loading && !erroredOut" class="text-white mt-36 font-normal italic">No queries yet</span>
         <loading-buffer v-if="loading" class="mt-36" />
-        <div v-if="posts.length && !loading" class="flex flex-col">
+        <div v-if="posts.length && !loading && !erroredOut" class="flex flex-col">
           <div
             class="w-[250px] h-[400px] bg-slate-400 rounded-lg shadow-lg py-6 px-6 overflow-scroll scroll-smooth sm:w-[400px] md:w-[600px]">
             <span v-html="formattedPosts(posts)"></span>
           </div>
           <div></div>
+        </div>
+        <div v-if="erroredOut && !loading" class="flex flex-col items-center mt-32">
+          <img src="@/assets/error404.png" class="w-24" />
+          <span class="text-white mt-2 font-normal italic">Something went wrong</span>
         </div>
       </div>
     </div>
@@ -22,7 +26,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import SearchBar from '@/components/SearchBar.vue';
-import { mapActions, mapGetters } from 'vuex';
+import { mapActions, mapGetters, mapState } from 'vuex';
 import LoadingBuffer from '@/components/LoadingBuffer.vue';
 
 interface PostInterface {
@@ -43,6 +47,7 @@ export default defineComponent({
     return {
       posts: [] as PostInterface[],
       loading: false,
+      erroredOut: false,
     };
   },
   components: {
@@ -50,13 +55,19 @@ export default defineComponent({
     LoadingBuffer,
   },
   methods: {
-    ...mapActions('scrapeApi', ['fetchPosts']),
+    ...mapActions('scrapeApi', ['fetchPosts', 'unsetError']),
     async scrapeLink(link: string) {
+      this.erroredOut = false;
+      this.unsetError();
       this.loading = true;
       await this.fetchPosts(link).then(() => {
         this.loading = false;
+      }).catch(() => {
+        this.loading = false;
+        this.erroredOut = true;
       });
       const posts = this.getPosts;
+      this.posts = [];
       posts.forEach((post: PostInterface) => {
         this.posts.push(post)
       });
@@ -87,8 +98,14 @@ export default defineComponent({
       return formatted.replace(/\n/g, '<br/>').replace(/ /g, '&nbsp;&nbsp;&nbsp;&nbsp;');
     },
   },
+  watch: {
+    error() {
+      this.erroredOut = true;
+    },
+  },
   computed: {
     ...mapGetters('scrapeApi', ['getPosts']),
+    ...mapState('scrapeApi', ['error']),
   },
 });
 </script>
