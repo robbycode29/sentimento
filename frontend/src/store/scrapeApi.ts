@@ -3,13 +3,21 @@ import axios from "axios";
 
 const state = {
   posts: [],
+  error: null,
 };
 const getters = {
   getPosts: (state: { posts: object[] }) => state.posts,
+  getError: (state: { error: object }) => state.error,
 };
 const mutations = {
   setPosts: (state: { posts: object[] }, posts: object[]) => {
     state.posts = posts;
+  },
+  setError: (state: { error: any }, error: any) => {
+    state.error = error;
+  },
+  unsetError: (state: { error: any }) => {
+    state.error = null;
   },
 };
 const actions = {
@@ -18,9 +26,12 @@ const actions = {
       const response = await axios.get("/scrape");
       commit("setPosts", response.data);
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      commit("setError", error);
     }
-  }
+  },
+  unsetError({ commit }: ActionContext<StaticRange, object>) {
+    commit("unsetError");
+  },
 };
 
 export default {
