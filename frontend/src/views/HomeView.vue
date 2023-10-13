@@ -1,12 +1,13 @@
 <template>
-  <div class="flex justify-center bg-slate-900 w-screen h-screen">
-    <div class="w-full mt-8 mx-[150px] pt-8 flex flex-col items-center gap-8">
+  <div class="flex justify-center bg-slate-900 min-h-screen">
+    <div class="w-full mt-8 mx-[100px] py-8 mb-8 flex flex-col items-center gap-8">
       <div>
         <h1 class="text-white text-3xl">Scrape site</h1>
       </div>
       <search-bar @search="scrapeLink" />
-      <div class="flex flex-col items-center">
-        <span v-if="!posts.length && !loading && !erroredOut" class="text-white mt-36 font-normal italic">No queries yet</span>
+      <div class="flex flex-col items-center gap-6">
+        <span v-if="!posts.length && !loading && !erroredOut" class="text-white mt-36 font-normal italic">No queries
+          yet</span>
         <loading-buffer v-if="loading" class="mt-36" />
         <div v-if="posts.length && !loading && !erroredOut" class="flex flex-col">
           <div
@@ -20,6 +21,9 @@
           <span class="text-white mt-2 font-normal italic">Something went wrong</span>
         </div>
       </div>
+      <div class="my-6">
+        <post-wall :posts="posts" />
+      </div>
     </div>
   </div>
 </template>
@@ -28,6 +32,7 @@ import { defineComponent } from 'vue';
 import SearchBar from '@/components/SearchBar.vue';
 import { mapActions, mapGetters, mapState } from 'vuex';
 import LoadingBuffer from '@/components/LoadingBuffer.vue';
+import PostWall from '@/components/PostWall.vue';
 
 interface PostInterface {
   genre: string;
@@ -53,6 +58,7 @@ export default defineComponent({
   components: {
     SearchBar,
     LoadingBuffer,
+    PostWall,
   },
   methods: {
     ...mapActions('scrapeApi', ['fetchPosts', 'unsetError']),
