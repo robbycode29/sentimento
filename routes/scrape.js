@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
   const getSentiment = async (text) => {
 
     // Uncomment this line and comment out the next two lines to use the Words API for the positive and negative words lists used in sentiment analysis
-    // And also uncomment the specified lines in utils/wordsApi.js
+    // And also uncomment the utils/wordsApi.js file
     // const { positiveWords, negativeWords } = await getWords();
 
     const positiveWords = ['joyful', 'blissful', 'loving', 'successful', 'delightful', 'inspiring', 'kind', 'grateful', 'hopeful', 'harmonious', 'exciting', 'serene', 'friendly', 'vibrant', 'positive', 'optimistic', 'upbeat', 'encouraging'];
@@ -95,6 +95,7 @@ router.get('/', async (req, res) => {
         image: '',
         href: '',
         sentiment: '',
+        words: 0,
       };
       section.genre = textSection[0];
       section.title = textSection[1];
@@ -122,6 +123,20 @@ router.get('/', async (req, res) => {
     for (let i = 0; i < images.length; i += 2) {
       sections[i / 2].image = images[i];
       sections[i / 2].href = hrefs[i];
+    }
+
+    const getText = async (url) => {
+      await page.goto(url, { timeout: 10000 });
+      await page.waitForSelector('div');
+      const text = await page.$eval('div', (element) => {
+        return element.innerText;
+      });
+      return text.split(' ').length;
+    };
+
+    for (let i = 0; i < sections.length; i++) {
+      const url = sections[i].href;
+      sections[i].words = await getText(url);
     }
 
     await browser.close();
