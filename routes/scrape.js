@@ -5,8 +5,8 @@ var express = require('express');
 var router = express.Router();
 
 router.get('/', async (req, res) => {
-  // const url = req.query.url;
-  const url = 'https://wsa-test.vercel.app/';
+  const url = req.query.url;
+  // const url = 'https://wsa-test.vercel.app/';
 
   const getWords = async () => {
     const positiveWordSets = [];
@@ -38,12 +38,12 @@ router.get('/', async (req, res) => {
     const negativeMatches = [];
 
     for (let i = 0; i < positiveWords.length; i++) {
-      if (text.includes(positiveWords[i])) {
+      if (text?.includes(positiveWords[i])) {
         positiveMatches.push(positiveWords[i]);
       }
     }
     for (let i = 0; i < negativeWords.length; i++) {
-      if (text.includes(negativeWords[i])) {
+      if (text?.includes(negativeWords[i])) {
         negativeMatches.push(negativeWords[i]);
       }
     }
