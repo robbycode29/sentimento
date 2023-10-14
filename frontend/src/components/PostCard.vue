@@ -6,7 +6,7 @@
             <br/>
             <p>{{ post.short_description }}</p>
         </div>
-        <div class="absolute -translate-x-[10px] translate-y-[260px] w-12">
+        <div class="absolute -translate-x-[10px] translate-y-[260px]">
             {{ getEmoji(post.sentiment) }}
         </div>
     </div>
