@@ -22,7 +22,7 @@
         </div>
       </div>
       <div class="my-6">
-        <post-wall :posts="posts" />
+        <post-wall v-if="posts.length && !loading && !erroredOut" :posts="posts" />
       </div>
     </div>
   </div>

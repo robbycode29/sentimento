@@ -21,9 +21,9 @@ const mutations = {
   },
 };
 const actions = {
-  async fetchPosts({ commit }: ActionContext<StaticRange, object>) {
+  async fetchPosts({ commit }: ActionContext<StaticRange, object>, url: string) {
     try {
-      const response = await axios.get("/scrape");
+      const response = await axios.get(`/scrape?url=${url}`);
       commit("setPosts", response.data);
     } catch (error) {
       commit("setError", error);
